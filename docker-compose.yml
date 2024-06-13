@@ -1,0 +1,43 @@
+version: '3.6'
+services:
+  mongodb:
+    image: mongo:6.0.3
+    restart: unless-stopped
+    networks:
+      - mongodb
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+    command: mongod --quiet --logpath /dev/null
+    env_file:
+      - ./.env
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: ${MONGO_ADMIN}
+        MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ADMIN_PASS}
+        MONGO_INITDB_DATABASE: admin
+  server:
+    build:
+      context: ./server
+      target: install-dependencies
+    command: npm run start:dev
+    networks:
+      - mongodb
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./server/src:/user/src/app/server/src
+      - images_data:/user/src/app/server/data/images
+    depends_on:
+      - mongodb
+    env_file:
+      - ./server/.env
+
+networks:
+  mongodb:
+    driver: bridge
+
+volumes:
+  mongodb:
+  images_data:
