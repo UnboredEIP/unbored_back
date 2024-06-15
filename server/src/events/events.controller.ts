@@ -7,6 +7,7 @@ import { Events } from './schemas/events.schema';
 import { EditEventDto } from './dto/editEvent.dto';
 import { ProGuard } from 'src/guards/role.guard';
 import { ParisEventDto } from './dto/searchEvents.dto';
+import { QueryEventsDto } from './dto/queryEvents.dto';
 
 @Controller('events')
 export class EventsController {
@@ -20,6 +21,18 @@ export class EventsController {
     @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
     async listEvents(@Req() req, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; events: Object[] }> {
         const response = await this.eventsService.listAllEvent(req.user.id);
+        res.status(response.statusCode);
+        return response;
+    }
+
+    @UseGuards(JwtGuard)
+    @Get('/lists/all')
+    @ApiTags('Global Events')
+    @ApiSecurity('authorization')
+    @ApiOperation({summary: "List all public events"})
+    @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
+    async listPublicEvents(@Req() req, @Query(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) query: QueryEventsDto,@Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; events: Object[] }> {
+        const response = await this.eventsService.listAllPublicEvent(query);
         res.status(response.statusCode);
         return response;
     }

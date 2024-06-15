@@ -6,6 +6,7 @@ import { EditEventDto } from './dto/editEvent.dto';
 import { CreateEventDto } from './dto/createEvent.dto';
 import { User } from 'src/auth/schemas/user.schema';
 import { ParisEventDto } from './dto/searchEvents.dto';
+import { QueryEventsDto } from './dto/queryEvents.dto';
 
 @Injectable()
 export class EventsService {
@@ -22,7 +23,26 @@ export class EventsService {
                 {private: true, creator: id},
                 {private: false}
             ]
-        });
+        })
+        return {statusCode: HttpStatus.OK, events: Events};
+    }
+
+
+    async listAllPublicEvent(query: QueryEventsDto) : Promise <{statusCode: HttpStatus, events: Object[]}> {
+        const pageSize = parseInt(query.pageSize);
+        const page = parseInt(query.page);
+
+        const queries = {};
+
+        Object.keys(query).forEach(key => {
+            if (key === 'email')
+                queries[key]= {$regex: query[key], $options: "i"}
+        })
+
+        if (pageSize <= 0 || page <= 0)
+            throw new BadRequestException("Bad request")
+
+        const Events = await this.eventModel.find(queries).skip(pageSize * (page - 1)).limit(pageSize)
         return {statusCode: HttpStatus.OK, events: Events};
     }
 
