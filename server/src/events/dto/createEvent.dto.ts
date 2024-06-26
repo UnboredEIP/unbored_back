@@ -50,4 +50,8 @@ export class CreateEventDto {
     @IsOptional()
     @ApiProperty()
     readonly rewards: string[];
+
+    @IsOptional()
+    @ApiProperty()
+    readonly coins: number;
 }

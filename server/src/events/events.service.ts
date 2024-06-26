@@ -73,7 +73,7 @@ export class EventsService {
     }
 
     async createUnboredEvent(id: string, createEventDto : CreateEventDto) : Promise<{statusCode: HttpStatus, event: Events}>{
-        const { name, categories, description, address, start_date, end_date, price, age, phone, email, rewards} = createEventDto;
+        const { name, categories, description, address, start_date, end_date, price, age, phone, email, rewards, coins} = createEventDto;
         const duplicatedEvent = await this.eventModel.find({ name });
         for (let ev in duplicatedEvent) {
             if (duplicatedEvent[ev].private === false) {
@@ -96,6 +96,7 @@ export class EventsService {
             age,
             email,
             rewards,
+            coins,
             private: false,
         })
         return {statusCode: HttpStatus.CREATED, event: event};

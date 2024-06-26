@@ -46,17 +46,24 @@ export class CronService {
         const actual = new Date();
         const events = await this.eventModel.find({$and: [{"end_date": { $lte: actual }}, {end: false}]});
         for (let event of events) {
+            const eventId = event._id.toString();
             if (event.rewards) {
-                for (let userId of event.participents) {
-                    const eventId = event._id.toString();
-                    await this.userModel.findOneAndUpdate({_id: userId}, 
+                await this.userModel.updateMany(
+                    {
+                        _id: {$in: event.participents}
+                    },
                     { 
                         $addToSet: {unlockedStyle: { $each: event.rewards}},
                         $push: {pastReservations: eventId},
                         $pull: { reservation: eventId},
                     }
-                );
-                }
+                )
+            }
+            if (event.coins) {
+                await this.userModel.updateMany(
+                    {_id: {$in: event.participents}},
+                    {$inc : {'coins' : event.coins}},
+                )
             }
             await this.eventModel.findOneAndUpdate({name: event.name}, {"end": true})
         }

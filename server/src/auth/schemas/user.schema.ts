@@ -147,6 +147,9 @@ export class User extends Document {
 
     @Prop()
     favorites: string[]
+
+    @Prop({default: 0})
+    coins: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)

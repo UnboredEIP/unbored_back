@@ -65,6 +65,8 @@ export class Events extends Document {
     @Prop()
     rewards: string[];
 
+    @Prop()
+    coins: number;
 }
 
 export const EventsSchema = SchemaFactory.createForClass(Events);
