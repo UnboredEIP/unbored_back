@@ -39,7 +39,7 @@ export class ProfileController {
     }
 
     @UseGuards(JwtGuard)
-    @Post('/')
+    @Get('/get')
     @ApiSecurity('authorization')
     @ApiHeader({name: "id", required: true})
     @ApiOperation({summary: "Get user informations by id"})
