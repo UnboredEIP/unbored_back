@@ -43,7 +43,8 @@ export class EventsService {
             throw new BadRequestException("Bad request")
 
         const Events = await this.eventModel.find(queries).skip(pageSize * (page - 1)).limit(pageSize)
-        const Total = await this.eventModel.countDocuments({queries})
+        console.log(queries);
+        const Total = await this.eventModel.countDocuments(queries)
         return {statusCode: HttpStatus.OK, events: Events, total: Total};
     }
 
