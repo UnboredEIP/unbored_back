@@ -32,7 +32,9 @@ export class EventsService {
         const pageSize = parseInt(query.pageSize);
         const page = parseInt(query.page);
 
-        const queries = {};
+        const queries = {
+            private: false
+        };
 
         Object.keys(query).forEach(key => {
             if (key === 'email')
