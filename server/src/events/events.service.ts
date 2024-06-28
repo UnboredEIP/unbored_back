@@ -28,7 +28,7 @@ export class EventsService {
     }
 
 
-    async listAllPublicEvent(query: QueryEventsDto) : Promise <{statusCode: HttpStatus, events: Object[]}> {
+    async listAllPublicEvent(query: QueryEventsDto) : Promise <{statusCode: HttpStatus, events: Object[], total: number}> {
         const pageSize = parseInt(query.pageSize);
         const page = parseInt(query.page);
 
@@ -43,7 +43,8 @@ export class EventsService {
             throw new BadRequestException("Bad request")
 
         const Events = await this.eventModel.find(queries).skip(pageSize * (page - 1)).limit(pageSize)
-        return {statusCode: HttpStatus.OK, events: Events};
+        const Total = await this.eventModel.countDocuments({queries})
+        return {statusCode: HttpStatus.OK, events: Events, total: Total};
     }
 
     async getEventById(eventId: string) : Promise<{statusCode: HttpStatus, event: Events}> {

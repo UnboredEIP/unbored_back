@@ -31,7 +31,7 @@ export class EventsController {
     @ApiSecurity('authorization')
     @ApiOperation({summary: "List all public events"})
     @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
-    async listPublicEvents(@Req() req, @Query(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) query: QueryEventsDto,@Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; events: Object[] }> {
+    async listPublicEvents(@Req() req, @Query(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) query: QueryEventsDto,@Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; events: Object[]; total: number }> {
         const response = await this.eventsService.listAllPublicEvent(query);
         res.status(response.statusCode);
         return response;
