@@ -21,6 +21,11 @@ export class EventService {
         return {statusCode: HttpStatus.OK, reservations: user.reservations};
     }
 
+    async showEventsFromUser(user: User) : Promise<{statusCode: HttpStatus, reservations: any[]}> {
+        const test = await this.eventModel.find({_id: {$in: user.reservations}});
+        return {statusCode: HttpStatus.OK, reservations: test};
+    }
+
     async addEvent(userId : string, addEvent : AddEventDto) : Promise<{statusCode: HttpStatus, reservations: string[]}> {
         try {
             const existingEvents = (await this.eventModel.find({ _id: { $in: addEvent.events } }))
