@@ -94,32 +94,35 @@ export class AuthService {
     }
 
     async googleLogin(tokenId: string) : Promise<{statusCode: HttpStatus, token: string, refresh : string}> {
-        const ticket = await client.verifyIdToken({
-            idToken: tokenId,
-            audience: [
-                process.env.GOOGLE_AUDIENCE_TOKEN,
-            ]
-        });
-        console.log("verified")
-        const email = ticket.getPayload()?.email ?? '';
-        const username = ticket.getPayload()?.name ?? '';
-        if (!email || !username) {
-            throw new ConflictException('Email or username could not be verified');
+        try {
+            const ticket = await client.verifyIdToken({
+                idToken: tokenId,
+                audience: [
+                    process.env.GOOGLE_AUDIENCE_TOKEN,
+                ]
+            });
+            const email = ticket.getPayload()?.email ?? '';
+            const username = ticket.getPayload()?.name ?? '';
+            if (!email || !username) {
+                throw new ConflictException('Email or username could not be verified');
+            }
+            let user = await this.userModel.findOne({email: email});
+            if (!user) {
+                user = await this.userModel.create({
+                    username: email.split('@')[0],
+                    email: email,
+                    password: await bcrypt.hash(email+process.env.GOOGLE_PASSWORD_CREATION, 10),
+                    description: "",
+                    role: Role.USER,
+                })
+            }
+            const sign = await this.userModel.findOne({email: (email.toLowerCase())}).select('username email preferences profilePhoto role')
+            const token = this.jwtService.sign({ users: sign }, {expiresIn: "30d", secret: process.env.JWT_TOKEN});
+            const refreshToken = this.jwtService.sign({ users: sign }, {expiresIn: '90d', secret: process.env.JWT_REFRESH});
+            return {statusCode: HttpStatus.ACCEPTED, token: token ,refresh: refreshToken};
+        } catch(error) {
+            throw new BadRequestException('Bad request');
         }
-        let user = await this.userModel.findOne({email: email});
-        if (!user) {
-            user = await this.userModel.create({
-                username: email.split('@')[0],
-                email: email,
-                password: await bcrypt.hash(email+process.env.GOOGLE_PASSWORD_CREATION, 10),
-                description: "",
-                role: Role.USER,
-            })
-        }
-        const sign = await this.userModel.findOne({email: (email.toLowerCase())}).select('username email preferences profilePhoto role')
-        const token = this.jwtService.sign({ users: sign }, {expiresIn: "30d", secret: process.env.JWT_TOKEN});
-        const refreshToken = this.jwtService.sign({ users: sign }, {expiresIn: '90d', secret: process.env.JWT_REFRESH});
-        return {statusCode: HttpStatus.ACCEPTED, token: token ,refresh: refreshToken};
     }
 
     async askResetPassword(email: string) : Promise<{statusCode: HttpStatus, message: string}> {
@@ -155,7 +158,6 @@ export class AuthService {
             await this.userModel.findOneAndUpdate({email: user.email}, {$set: {"resetToken": null}})
         } catch (error) {
             await this.userModel.findOneAndUpdate({email: decodedToken.email}, {$set: {"resetToken": null}})
-            console.log(error);
             throw new NotAcceptableException("Expired"); 
         }
         if (!(user.resetToken !== undefined && user.resetToken === tokenId)) {

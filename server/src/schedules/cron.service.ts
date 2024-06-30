@@ -41,6 +41,15 @@ export class CronService {
         }
     }
 
+    @Cron(CronExpression.EVERY_10_MINUTES)
+    async deleteNotExistingUsersFromEvent() {
+        const events = await this.eventModel.find({});
+        for (let event of events) {
+            const foundUsers = (await this.userModel.find({ _id: { $in: event.participents } })).map((item) => item._id.toString());
+            await this.eventModel.updateOne({_id: event._id}, {participents: foundUsers});
+        }
+    }
+
     @Cron(CronExpression.EVERY_10_SECONDS)
     async deleteEndEvent() {
         const actual = new Date();

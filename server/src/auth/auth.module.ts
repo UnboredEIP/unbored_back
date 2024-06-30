@@ -23,15 +23,17 @@ import { MailerModule } from '@nestjs-modules/mailer';
             }
         }),
         MongooseModule.forFeature([{name: 'User', schema: UserSchema}]),
-        MailerModule.forRoot({
-            transport: {
-                host: 'smtp.gmail.com',
-                port: 587,
-                auth: {
-                    user: process.env.UNBORED_MAIL,
-                    pass: process.env.UNBORED_PASSWORD,
-                },
-            }
+        MailerModule.forRootAsync({
+            useFactory: () => ({
+                transport: {
+                    host: 'smtp.gmail.com',
+                    port: 587,
+                    auth: {
+                        user: process.env.UNBORED_MAIL,
+                        pass: process.env.UNBORED_PASSWORD,
+                    },
+                }
+            })
         }),
     ],
     controllers: [AuthController],

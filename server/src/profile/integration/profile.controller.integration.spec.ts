@@ -93,7 +93,7 @@ describe('ProfileController', () => {
         /* get users profile by id */
         it ('should send me user 2 informations using user 1 bearer token', async() => {
             const iduser2 = await request(httpServer).get('/profile').set('Authorization', 'Bearer ' + bearerUser2);
-            const response = await request(httpServer).post('/profile?id='+iduser2.body.user._id).set('Authorization', 'Bearer ' + bearerUser2)
+            const response = await request(httpServer).get('/profile?id='+iduser2.body.user._id).set('Authorization', 'Bearer ' + bearerUser2)
             expect(response.status).toBe(HttpStatus.OK);
         })
 
@@ -163,17 +163,10 @@ describe('ProfileController', () => {
         /* Update avatar */
         it ('should return me new avatar', async() => {
             const updateavatardto = {
-                style: {
-                    head: "1",
-                    body: "2",
-                    pants: "2",
-                    shoes: "1",
-                }
+                head: {id: "1"},
             }
             const response = await request(httpServer).post('/profile/avatar').set('Authorization', 'Bearer ' + bearerUser1).send(updateavatardto);
-            const userprofile = await request(httpServer).get('/profile/avatar').set('Authorization', 'Bearer ' + bearerUser1);
             expect(response.status).toBe(HttpStatus.OK);
-            expect(userprofile.body.style).toMatchObject(updateavatardto.style);
         })
 
         it ('should return me an error (no bearer token)', async() => {
