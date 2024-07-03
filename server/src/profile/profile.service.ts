@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { User } from "../auth/schemas/user.schema";
@@ -92,5 +92,21 @@ export class ProfileService {
         } catch (err) {
             throw new BadRequestException("Bad request");
         }
+    }
+
+    async purchaseAvatar(user: User, unlock: string, coins: number) : Promise<{statusCode: HttpStatus, coins: number, unlockedStyles: string[]}> {
+        if (user.coins < coins) {
+            throw new NotAcceptableException('Not enough coins !');
+        }
+        if (user.unlockedStyle.includes(unlock)) {
+            throw new NotAcceptableException('Already unlocked avatar !');
+        }
+
+        const updated = await this.userModel.findOneAndUpdate({_id: user.id}, {
+            $addToSet: {unlockedStyle: unlock},
+            $set: {coins: user.coins - coins}
+        }, {new: true});
+
+        return {statusCode: HttpStatus.OK, coins: updated.coins, unlockedStyles: updated.unlockedStyle};
     }
 }

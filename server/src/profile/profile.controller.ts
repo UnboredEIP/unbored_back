@@ -95,7 +95,19 @@ export class ProfileController {
     @ApiConsumes('application/json')
     async changeAvatar(@Req() req, @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) updateAvatarDto: UpdateAvatarDto, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; style: Object }> {
         const response = await this.profileService.ChangeAvatar(req.user.id, updateAvatarDto);
-        res.status(HttpStatus.OK);
+        res.status(response.statusCode);
+        return response;
+    }
+
+    @UseGuards(JwtGuard)
+    @Post('/avatar/buy')
+    @ApiSecurity('authorization')
+    @ApiTags('Profile')
+    @ApiOperation({summary: "Buy avatar"})
+    @ApiConsumes('application/json')
+    async purchaseAvatar(@Req() req, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; coins: number, unlockedStyles: string[]}> {
+        const response = await this.profileService.purchaseAvatar(req.user, req.body.unlock, req.body.coins);
+        res.status(response.statusCode);
         return response;
     }
 
