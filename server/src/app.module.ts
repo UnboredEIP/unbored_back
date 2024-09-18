@@ -13,11 +13,10 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CronModule } from './schedules/cron.module';
 import { TriggerModule } from './schedules/trigger.module';
 import { GroupsModule } from './groups/groups.module';
-import { QrcodeModule } from './qrcode/qrcode.module';
 import { ChatModule } from './chat/chat.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), AuthModule, ProfileModule, EventModule, ChatModule, GroupModule, DatabaseModule.forRoot(""), ConfigModule.forRoot({ isGlobal: true}), EventsModule, FriendsModule, CronModule, TriggerModule, GroupsModule, QrcodeModule],
+  imports: [ScheduleModule.forRoot(), AuthModule, ProfileModule, EventModule, ChatModule, GroupModule, DatabaseModule.forRoot(""), ConfigModule.forRoot({ isGlobal: true}), EventsModule, FriendsModule, CronModule, TriggerModule, GroupsModule],
   controllers: [AppController],
   providers: [AppService],
 })
