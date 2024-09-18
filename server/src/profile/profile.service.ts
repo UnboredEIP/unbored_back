@@ -70,11 +70,10 @@ export class ProfileService {
         };
         
         const currentUser = await this.userModel.findById(id);
-
         Object.keys(updateAvatarDto).forEach((key) => {
             if (updateAvatarDto[key] !== undefined) {
-                updateAvatarDto[key].color = updateAvatarDto[key].color === undefined ? currentUser.style[key].color : updateAvatarDto[key].color;
-                updateAvatarDto[key].id = updateAvatarDto[key].id === undefined ? currentUser.style[key].id : updateAvatarDto[key].id;
+                updateAvatarDto[key].color = updateAvatarDto[key].hasOwnProperty("color") === false ? currentUser.style[key].color : updateAvatarDto[key].color;
+                updateAvatarDto[key].id = updateAvatarDto[key].hasOwnProperty("id") === false ? currentUser.style[key].id : updateAvatarDto[key].id;
                 updateQuery.$set[`style.${key}`] = updateAvatarDto[key];
             }
         });
@@ -86,18 +85,15 @@ export class ProfileService {
     }
 
     async uploadProfilePicture(userId: string, file: Express.Multer.File) : Promise<{statusCode: HttpStatus, message: string}> {
-        try {
-            const user = await this.userModel.findOneAndUpdate({_id: userId}, {profilePhoto: file.filename }, {new: true});
-            return {statusCode: HttpStatus.OK, message: "Image uploaded !"};
-        } catch (err) {
-            throw new BadRequestException("Bad request");
-        }
+        await this.userModel.findOneAndUpdate({_id: userId}, {profilePhoto: file?.filename }, {new: true});
+        return {statusCode: HttpStatus.OK, message: "Image uploaded !"};
     }
 
     async purchaseAvatar(user: User, unlock: string, coins: number) : Promise<{statusCode: HttpStatus, coins: number, unlockedStyles: string[]}> {
         if (user.coins < coins) {
             throw new NotAcceptableException('Not enough coins !');
         }
+
         if (user.unlockedStyle.includes(unlock)) {
             throw new NotAcceptableException('Already unlocked avatar !');
         }

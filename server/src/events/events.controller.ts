@@ -6,7 +6,6 @@ import { CreateEventDto } from './dto/createEvent.dto';
 import { Events } from './schemas/events.schema';
 import { EditEventDto } from './dto/editEvent.dto';
 import { ProGuard } from 'src/guards/role.guard';
-import { ParisEventDto } from './dto/searchEvents.dto';
 import { QueryEventsDto } from './dto/queryEvents.dto';
 
 @Controller('events')
@@ -101,14 +100,13 @@ export class EventsController {
         return response;
     }
 
-    @UseGuards(JwtGuard)
-    @Post('/paris')
+    @UseGuards(JwtGuard, ProGuard)
+    @Get('/validate/ticket')
     @ApiTags('Global Events')
     @ApiSecurity('authorization')
-    @ApiOperation({summary: 'Show event from paris'})
-    @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
-    async parisEvent(@Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) parisEventDto : ParisEventDto, @Res({passthrough: true}) res) : Promise<{ statusCode: HttpStatus; events: any[] }> {
-        const response = await this.eventsService.getEventsFromParis(parisEventDto);
+    @ApiOperation({summary: "Validate a ticket"})
+    async validateTicket(@Req() creator, @Query('key') key: string, @Query('user') userId: string, @Query('event') eventId: string, @Res({passthrough: true}) res) : Promise<{ statusCode: HttpStatus, message: string}> {
+        const response = await this.eventsService.validateTicket(creator.user._id, key, userId, eventId);
         res.status(response.statusCode)
         return response;
     }

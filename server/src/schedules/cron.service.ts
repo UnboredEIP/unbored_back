@@ -45,8 +45,10 @@ export class CronService {
     async deleteNotExistingUsersFromEvent() {
         const events = await this.eventModel.find({});
         for (let event of events) {
-            const foundUsers = (await this.userModel.find({ _id: { $in: event.participents } })).map((item) => item._id.toString());
-            await this.eventModel.updateOne({_id: event._id}, {participents: foundUsers});
+            const eventParticipents = event.participents
+            const eventParticipentsIds = event.participents.map((item) => item.user)
+            const foundUsers = (await this.userModel.find({ _id: { $in: eventParticipentsIds } })).map((item) => item._id.toString());
+            await this.eventModel.updateOne({_id: event._id}, {participents: eventParticipents.filter(item => foundUsers.includes(item.user))});
         }
     }
 

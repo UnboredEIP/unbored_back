@@ -11,6 +11,8 @@ import { ProfileModule } from "../profile.module";
 import { AuthModule } from "../../auth/auth.module";
 import { DatabaseModule } from "../../database/database.module";
 import { ConfigModule } from "@nestjs/config";
+import * as fs from 'fs';
+import * as path from 'path';
 
 const User1 = {
     username: "testusername",
@@ -101,6 +103,18 @@ describe('ProfileController', () => {
             const response = await request(httpServer).post('/profile?id='+"badId").set('Authorization', 'Bearer ' + bearerUser2)
             expect(response.status).toBe(HttpStatus.NOT_FOUND);
         })
+
+        it ('should return me profile by id', async() => {
+            const iduser2 = await request(httpServer).get('/profile').set('Authorization', 'Bearer ' + bearerUser2);
+            const response = await request(httpServer).get('/profile/get?id='+iduser2.body.user._id).set('Authorization', 'Bearer ' + bearerUser2)
+            expect(response.status).toBe(HttpStatus.OK);
+        })
+
+        it ('should return me an error (false id)', async() => {
+            const response = await request(httpServer).get('/profile/get?id='+"falseid").set('Authorization', 'Bearer ' + bearerUser2)
+            expect(response.status).toBe(HttpStatus.NOT_FOUND);
+            expect(response.body.message).toBe("Invalid Id");
+        })        
     })
 
     describe('update users profile', () => {
@@ -136,6 +150,41 @@ describe('ProfileController', () => {
             const response = await request(httpServer).put('/profile/update').set('Authorization', 'Bearer ' + bearerUser1).send(updateDto);
             expect(response.status).toBe(HttpStatus.BAD_REQUEST);
         })
+
+        it ('should change my password', async() => {
+            const updateDto = {
+                password: "test"
+            }
+            const response = await request(httpServer).put('/profile/update').set('Authorization', 'Bearer ' + bearerUser1).send(updateDto);
+            const login = await request(httpServer).post('/auth/login').send({email: User1.email}).send({password: "test"})
+            expect(login.body.hasOwnProperty('refresh')).toBe(true)
+            expect(response.status).toBe(HttpStatus.OK);
+        })
+
+        it ('should upload my profile picture', async() => {
+            const testImagePath = path.join(__dirname, 'test.png');
+            const response = await request(httpServer).post('/profile/profilepicture').set('Authorization', 'Bearer ' + bearerUser1).attach('file', testImagePath);
+            expect(response.status).toBe(HttpStatus.OK)
+            expect(response.body.message).toBe("Image uploaded !");
+            const u = await dbConnection.collection('users').findOne({email: User1.email})
+            const uploadedImagePath = path.join('./data/images', u.profilePhoto);
+            if (fs.existsSync(uploadedImagePath)) {
+                fs.unlinkSync(uploadedImagePath);
+            }
+        })
+
+        it ('should change my profile picture', async() => {
+            const testImagePath = path.join(__dirname, 'test.png');
+            await request(httpServer).post('/profile/profilepicture').set('Authorization', 'Bearer ' + bearerUser1).attach('file', testImagePath);
+            const response = await request(httpServer).post('/profile/profilepicture').set('Authorization', 'Bearer ' + bearerUser1).attach('file', testImagePath);
+            expect(response.status).toBe(HttpStatus.OK)
+            expect(response.body.message).toBe("Image uploaded !");
+            const u = await dbConnection.collection('users').findOne({email: User1.email})
+            const uploadedImagePath = path.join('./data/images', u.profilePhoto);
+            if (fs.existsSync(uploadedImagePath)) {
+                fs.unlinkSync(uploadedImagePath);
+            }
+        })
     })
 
     describe('user avatar', () => {
@@ -162,10 +211,24 @@ describe('ProfileController', () => {
 
         /* Update avatar */
         it ('should return me new avatar', async() => {
-            const updateavatardto = {
-                head: {id: "1"},
+            interface AvatarPart {
+                id?: string;
+                color?: string;
             }
+            const updateavatardto: { head: AvatarPart; eyebrows: AvatarPart; hair: AvatarPart; eyes: AvatarPart; mouth: AvatarPart; beard: AvatarPart; accessory: AvatarPart; clothes: AvatarPart; } = 
+                { head: { id: "1", color: "red" },
+                eyebrows: { id: "2", color: "blue" },
+                hair: { id: "3", color: "red" },
+                eyes: { id: "4", color: "blue" },
+                mouth: { id: "5", color: "pink" },
+                beard: { id: "6", color: "purple" },
+                accessory: { id: "7" },
+                clothes: { color: "brown" } }
             const response = await request(httpServer).post('/profile/avatar').set('Authorization', 'Bearer ' + bearerUser1).send(updateavatardto);
+            const u = await dbConnection.collection('users').findOne({email: User1.email})
+            updateavatardto.clothes.id = "0";
+            updateavatardto.accessory.color = "0";
+            expect(updateavatardto).toEqual(u.style)
             expect(response.status).toBe(HttpStatus.OK);
         })
 
@@ -180,6 +243,34 @@ describe('ProfileController', () => {
             }
             const response = await request(httpServer).post('/profile/avatar').send(updateavatardto);
             expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+        })
+
+        it ("should buy me new avatar", async() => {
+            await dbConnection.collection('users').findOneAndUpdate({email: User1.email}, {$set: {coins: 1000}});
+            const response = await request(httpServer).post('/profile/avatar/buy').set('Authorization', 'Bearer '+ bearerUser1).send({unlock: "avatar1", coins: 400});
+            const u = await dbConnection.collection('users').findOne({email: User1.email});
+            expect(response.status).toBe(HttpStatus.OK)
+            expect(u.coins).toBe(600)
+            expect(u.unlockedStyle.includes("avatar1")).toBe(true)
+        })
+
+        it ("should not buy avatar (not enough coins)", async() => {
+            const response = await request(httpServer).post('/profile/avatar/buy').set('Authorization', 'Bearer '+ bearerUser1).send({unlock: "avatar1", coins: 400});
+            const u = await dbConnection.collection('users').findOne({email: User1.email});
+            expect(response.status).toBe(HttpStatus.NOT_ACCEPTABLE)
+            expect(u.coins).toBe(0)
+            expect(response.body.message).toBe('Not enough coins !');
+        })
+
+        it ("should not buy me new avatar (already unlocked)", async() => {
+            await dbConnection.collection('users').findOneAndUpdate({email: User1.email}, {$set: {coins: 1000}});
+            await request(httpServer).post('/profile/avatar/buy').set('Authorization', 'Bearer '+ bearerUser1).send({unlock: "avatar1", coins: 400});
+            const response = await request(httpServer).post('/profile/avatar/buy').set('Authorization', 'Bearer '+ bearerUser1).send({unlock: "avatar1", coins: 400});
+            const u = await dbConnection.collection('users').findOne({email: User1.email});
+            expect(response.status).toBe(HttpStatus.NOT_ACCEPTABLE)
+            expect(u.coins).toBe(600)
+            expect(u.unlockedStyle.length).toBe(1)
+            expect(response.body.message).toBe('Already unlocked avatar !')
         })
     })
 

@@ -58,14 +58,14 @@ export class User extends Document {
     pastReservations: string[];
 
     @Prop({type: Object, 
-        default: {head: {id: 0, color: 0},
-        eyebrows: {id: 0, color: 0},
-        hair: {id: 0, color: 0},
-        eyes: {id: 0, color: 0},
-        mouth: {id: 0, color: 0},
-        beard: {id: 0, color: 0},
-        accessory: {id: 0, color: 0}},
-        clothes: {id: 0, color: 0},
+        default: {head: {id: "0", color: "0"},
+        eyebrows: {id: "0", color: "0"},
+        hair: {id: "0", color: "0"},
+        eyes: {id: "0", color: "0"},
+        mouth: {id: "0", color: "0"},
+        beard: {id: "0", color: "0"},
+        accessory: {id: "0", color: "0"},
+        clothes: {id: "0", color: "0"}},
     })
     style: {
         head: {

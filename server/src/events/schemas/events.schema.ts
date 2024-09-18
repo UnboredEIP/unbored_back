@@ -45,7 +45,7 @@ export class Events extends Document {
     private: boolean;
     
     @Prop()
-    participents: string[];
+    participents: {key: string, user: string, registered: boolean}[];
     
     @Prop()
     price: string;

@@ -1,11 +1,10 @@
-import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException, UseGuards } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Events } from './schemas/events.schema';
 import { EditEventDto } from './dto/editEvent.dto';
 import { CreateEventDto } from './dto/createEvent.dto';
 import { User } from 'src/auth/schemas/user.schema';
-import { ParisEventDto } from './dto/searchEvents.dto';
 import { QueryEventsDto } from './dto/queryEvents.dto';
 
 @Injectable()
@@ -45,7 +44,6 @@ export class EventsService {
             throw new BadRequestException("Bad request")
 
         const Events = await this.eventModel.find(queries).skip(pageSize * (page - 1)).limit(pageSize)
-        console.log(queries);
         const Total = await this.eventModel.countDocuments(queries)
         return {statusCode: HttpStatus.OK, events: Events, total: Total};
     }
@@ -85,7 +83,7 @@ export class EventsService {
             }
         }
         if (end_date && end_date < start_date)
-            throw new BadRequestException("Bad Request")
+            throw new BadRequestException("end_date should be greater than start_date")
 
         const event = await this.eventModel.create({
             name,
@@ -141,33 +139,6 @@ export class EventsService {
         return {statusCode: HttpStatus.OK, event: event};
     }
 
-    async getEventsFromParis(parisEventDto : ParisEventDto) : Promise<{ statusCode: HttpStatus; events: any[] }> {
-        let queryParams = '';
-
-        if (parisEventDto.date_end) {
-            queryParams += `refine=date_end:${parisEventDto.date_end}`;
-        }
-
-        if (parisEventDto.tags && parisEventDto.tags.length > 0) {
-            parisEventDto.tags.forEach(tag => {
-                queryParams += `&refine=tags:"${tag}"`;
-            });
-        }
-
-        const apiUrl = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/que-faire-a-paris-/records?limit=20&"
-        const completeUrl = apiUrl + queryParams;
-    
-        console.log(completeUrl)
-        try {
-            const response = await fetch(completeUrl, {method: 'GET',headers: {}});
-            const responseData = await response.json();
-            return {statusCode: HttpStatus.OK, events: responseData}
-        } catch(error) {
-            console.log(error)
-            throw new BadRequestException('Bad request')
-        }
-    }
-
     async setLike(id: string, user: User) : Promise<{statusCode: HttpStatus, message: string}> {
         await this.userModel.findByIdAndUpdate(user._id, { $addToSet: {parisLike: id}});
         return {statusCode: HttpStatus.OK, message: "Succesfully liked"}
@@ -176,16 +147,37 @@ export class EventsService {
 
     async deleteImage(filename: string): Promise<Boolean> {
         try {
-        const fs = require('fs');
-          const imagePath = `./data/images/${filename}`;
-          if (fs.existsSync(imagePath)) {
-            await fs.unlinkSync(imagePath);
-            return true;
-          } else {
-            return false;
-          }
+            const fs = require('fs');
+            const imagePath = `./data/images/${filename}`;
+            if (fs.existsSync(imagePath)) {
+                await fs.unlinkSync(imagePath);
+                return true;
+            } else {
+                return false;
+            }
         } catch (error) {
-          return false;
+            return false;
         }
+    }
+
+    async validateTicket(creatorId: string, key: string, userId: string, eventId: string) : Promise<{statusCode: HttpStatus, message: string}> {
+        if (!(creatorId && key && userId && eventId))
+            throw new BadRequestException('Missing either creatorId, key, userId or eventId')
+        const event = await this.eventModel.findById(eventId);
+        if (creatorId.toString() !== event.creator) {
+            throw new UnauthorizedException('You are not the owner of this event')
+        }
+        const user = event.participents.find(event => event.user === userId)
+        if (!user) {
+            throw new NotFoundException('Could not find this user ticket')
+        }
+        if (user.key !== key) {
+            throw new UnauthorizedException('Ticket is not valid')
+        }
+        if (user.registered === true) {
+            throw new UnauthorizedException('Ticket has already been used')
+        }
+        await this.eventModel.findOneAndUpdate({"participents.key": key}, {participents: event.participents.map(item => {if (item.user === userId) item.registered = true; return item})});
+        return {statusCode: HttpStatus.ACCEPTED, message: "User registered"}
     }
 }

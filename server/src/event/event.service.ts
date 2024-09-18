@@ -7,6 +7,8 @@ import { RemoveEventDto } from './dto/RemoveEvent.dto';
 import { Events } from 'src/events/schemas/events.schema';
 import { RateEventDto } from './dto/RateEvent.Dto';
 import { RemoveEventRateDto } from './dto/DeleteEventRate.dto';
+import { randomBytes } from 'crypto';
+import * as QRCode from 'qrcode'
 
 @Injectable()
 export class EventService {
@@ -29,9 +31,16 @@ export class EventService {
     async addEvent(userId : string, addEvent : AddEventDto) : Promise<{statusCode: HttpStatus, reservations: string[]}> {
         try {
             const existingEvents = (await this.eventModel.find({ _id: { $in: addEvent.events } }))
-            if (existingEvents.length < 1)
+            const eventsToUpdate = await this.eventModel.find({_id: { $in: existingEvents }, "participents.user": { $ne: userId }}).select("_id");
+            if (eventsToUpdate.length < 1)
                 throw new BadRequestException("Bad request")
-            await this.eventModel.updateMany({ _id: { $in: existingEvents } }, { $addToSet: { participents: userId } });
+            const key = randomBytes(20).toString('hex');
+            const user = {
+                key: key,
+                user: userId,
+                registered: false,
+            }
+            await this.eventModel.updateMany({ _id: { $in: eventsToUpdate.map(event => event._id) } }, { $addToSet: { participents: user } });
         } catch (err) {
             throw new BadRequestException("Bad request")
         }
@@ -42,15 +51,13 @@ export class EventService {
     async removeEvent(userId : string, deleteEvent : RemoveEventDto) : Promise<{statusCode: HttpStatus, reservations: string[]}> {
         try {
             const existingEvents = (await this.eventModel.find({_id: {$in: deleteEvent.events}}))
-            console.log(existingEvents)
             if (existingEvents.length < 1)
                 throw new BadRequestException('Bad request')
-            await this.eventModel.updateMany({ _id: { $in: existingEvents } }, { $pull: { participents: userId } });
+            await this.eventModel.updateMany({ _id: { $in: existingEvents } }, { $pull: { participents: { user: userId }} });
         } catch (err) {
             throw new BadRequestException('Bad Request')
         }
         const updatedUser = await this.userModel.findByIdAndUpdate(userId, { $pull : {reservations: {$in: deleteEvent.events}}}, {new: true});
-
         return {statusCode: HttpStatus.OK, reservations: updatedUser.reservations};
     }
 
@@ -102,15 +109,13 @@ export class EventService {
             id: file.filename,
             userId: userId
         }
-        if (!Types.ObjectId.isValid(eventId))
+        const existing = await this.eventModel.findOne({_id: eventId});
+        const userExists = await this.userModel.findOne({_id: userId});
+        if (!Types.ObjectId.isValid(eventId) || !existing || !userExists)
             throw new NotFoundException("Invalid Id");
-        try {
-            await this.userModel.findOneAndUpdate({_id: userId}, {$addToSet: {pictures: pictureForUser}}, {new: true});
-            await this.eventModel.findOneAndUpdate({_id: eventId}, {$addToSet: {pictures: pictureForEvent}}, {new: true})
-            return {statusCode: HttpStatus.OK, message: "Image uploaded !"};
-        } catch (err) {
-            throw new BadRequestException("Bad request");
-        }
+        await this.userModel.findOneAndUpdate({_id: userId}, {$addToSet: {pictures: pictureForUser}}, {new: true});
+        await this.eventModel.findOneAndUpdate({_id: eventId}, {$addToSet: {pictures: pictureForEvent}}, {new: true})
+        return {statusCode: HttpStatus.OK, message: "Image uploaded !"};
     }
 
     async addFavorites(userId: string, addEvent: AddEventDto) : Promise<{statusCode: HttpStatus, message: string}> {
@@ -137,4 +142,15 @@ export class EventService {
         return {statusCode: HttpStatus.OK, message: "Successfully remove from favorites"}
     }
 
+
+    async getEventTicket(userId: string, eventId: string) : Promise<{statusCode: HttpStatus, ticket: string}> {
+        const t = await this.eventModel.findOne({_id: eventId})
+        if (t === null)
+            throw new BadRequestException('Bad request');
+        const key = t.participents.find(p => p.user === userId)
+        if (key === undefined)
+            throw new BadRequestException('You are not registered to this event')
+        const qrCodeDataURL = await QRCode.toDataURL(JSON.stringify(key));
+        return {statusCode: HttpStatus.OK, ticket: qrCodeDataURL}
+    }
 }

@@ -112,6 +112,18 @@ export class EventController {
     }
 
     @UseGuards(JwtGuard)
+    @Get('/ticket')
+    @ApiTags('Users Event')
+    @ApiSecurity('authorization')
+    @ApiOperation({summary: 'get event ticket by id'})
+    async getTicket(@Req() req, @Query('event') eventId, @Res({passthrough: true}) res) {
+        const response = await this.eventService.getEventTicket(req.user.id, eventId);
+        res.status(response.statusCode)
+        return {statusCode: response.statusCode, ticket: `<img src="${response.ticket}" alt="QR Code" />`}
+    }
+
+
+    @UseGuards(JwtGuard)
     @Post('/upload')
     @UseInterceptors(FileInterceptor('file', {dest: "./data/images"}))
     @ApiTags('Global Events')
