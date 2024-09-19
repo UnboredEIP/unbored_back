@@ -150,6 +150,9 @@ export class User extends Document {
 
     @Prop({default: 0})
     coins: number;
+
+    @Prop({default: 0})
+    notification: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)

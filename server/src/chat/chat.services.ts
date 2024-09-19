@@ -14,15 +14,15 @@ export class ChatService {
     ) {}
 
     async createMessage(senderId: string, receiverId: string, content: string): Promise<Message> {
-        if (!Types.ObjectId.isValid(receiverId)) {
+        if (!Types.ObjectId.isValid(receiverId)) {
             throw new BadRequestException("Bad Request")
         }
-        const recv = await this.userModel.findOne({_id: receiverId});
-        
+        const recv = await this.userModel.findOne({_id: receiverId}); 
         if (senderId === receiverId)
             throw new BadRequestException("Receiver ID is the same as the Sender ID")
         if (!recv)
             throw new BadRequestException("Receiver ID not found")
+        await this.userModel.findOne({_id: receiverId}, {$inc: {'notification': 1}})
         const newMessage = new this.messageModel({ senderId, receiverId, content });
         return newMessage.save();
     }
@@ -37,5 +37,18 @@ export class ChatService {
         })
         .sort({ createdAt: 1 })
         .exec();
+    }
+
+    async deleteNotification(userId: string, number: number) {
+        if (!Types.ObjectId.isValid(userId)) {
+            throw new BadRequestException("Bad Request")
+        }
+        const user = await this.userModel.findOne({_id: userId}); 
+        if (!user)
+            throw new BadRequestException("User ID not found")
+        if (number <= 0) {
+            throw new BadRequestException('Number must be equal to 1 or higher')
+        }
+        await this.userModel.findOneAndUpdate({_id: userId}, {$inc: {notification: -number}});
     }
 }
