@@ -45,7 +45,7 @@ export class EventController {
     @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
     @Get('/users/reservations')
     async showEventsFromAnyUser(@Query('id') id, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; reservations: any[] }> {
-        const response = await this.eventService.showEventsFromUser(id);
+        const response = await this.eventService.showEventsFromAnyUser(id);
         res.status(response.statusCode);
         return response;
     }
