@@ -39,6 +39,16 @@ export class ChatService {
         .exec();
     }
 
+    async getNotification(userId: string) {
+        if (!Types.ObjectId.isValid(userId)) {
+            throw new BadRequestException("Bad Request")
+        }
+        const user = await this.userModel.findOne({_id: userId}); 
+        if (!user)
+            throw new BadRequestException("User ID not found")
+        return {notification: user.notification}
+    }
+
     async deleteNotification(userId: string, number: number) {
         if (!Types.ObjectId.isValid(userId)) {
             throw new BadRequestException("Bad Request")
