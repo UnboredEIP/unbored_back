@@ -31,7 +31,7 @@ export class EventService {
     async showEventsFromAnyUser(userId: string) {
         try {
             const user = await this.userModel.findOne({_id: userId})
-            const userEvent = await this.eventModel.find({id: {$in: user.reservations}});
+            const userEvent = await this.eventModel.find({_id: {$in: user.reservations}});
             return {statusCode: HttpStatus.OK, reservations: userEvent}
         } catch(err) {
             throw new BadRequestException("Bad request");
