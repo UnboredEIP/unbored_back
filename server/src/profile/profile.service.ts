@@ -105,4 +105,31 @@ export class ProfileService {
 
         return {statusCode: HttpStatus.OK, coins: updated.coins, unlockedStyles: updated.unlockedStyle};
     }
+
+    async getHistory(userId: string) : Promise<{statusCode: HttpStatus, history: string[]}> {
+        try {
+            const user = await this.userModel.findOne({_id: userId})
+            return {statusCode: HttpStatus.OK, history: user.history}
+        } catch (err) {
+            throw new BadRequestException("Bad Request");
+        }
+    }
+
+    async setHistory(userId: string, historyToSet: string[]) : Promise<{statusCode: HttpStatus, history: string[]}> {
+        try {
+            const user = await this.userModel.findOneAndUpdate({_id: userId},{$push: { history: { $each: historyToSet } } }, {new: true})
+            return {statusCode: HttpStatus.OK, history: user.history}
+        } catch (err) {
+            throw new BadRequestException("Bad request");
+        }
+    }
+
+    async deleteHistory(userId: string) : Promise<{statusCode: HttpStatus, history: string[]}> {
+        try {
+            await this.userModel.findOneAndUpdate({_id: userId}, {$set: {history: []}})
+            return {statusCode: HttpStatus.OK, history: []}
+        } catch (err) {
+            throw new BadRequestException("Bad request");
+        }
+    }
 }

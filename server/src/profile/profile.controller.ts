@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Req, Put, Body, Post, Query, UseInterceptors, UploadedFile, ParseFilePipe, FileTypeValidator, Res, BadRequestException, ValidationPipe, HttpStatus } from '@nestjs/common';
+import { Controller, Get, UseGuards, Req, Put, Body, Post, Query, UseInterceptors, UploadedFile, ParseFilePipe, FileTypeValidator, Res, BadRequestException, ValidationPipe, HttpStatus, Delete } from '@nestjs/common';
 import { JwtGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateDto } from './dto/update.dto';
 import { UpdateAvatarDto } from './dto/updateAvatar.dto';
@@ -34,6 +34,39 @@ export class ProfileController {
     @ApiOperation({summary: "Get current user informations"})
     async profile(@Req() req, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; user: User }> {
         const response = await this.profileService.profile(req.user);
+        res.status(HttpStatus.OK);
+        return response;
+    }
+
+    @UseGuards(JwtGuard)
+    @Post('/history/set')
+    @ApiSecurity('authorization')
+    @ApiTags('Profile')
+    @ApiOperation({summary: "set history"})
+    async setHistory(@Req() req, @Res({ passthrough: true }) res, @Body() body): Promise<{statusCode: HttpStatus, history: string[]}> {
+        const response = await this.profileService.setHistory(req.user.id, body.history);
+        res.status(HttpStatus.OK);
+        return response;
+    }
+
+    @UseGuards(JwtGuard)
+    @Get('/history/get')
+    @ApiSecurity('authorization')
+    @ApiTags('Profile')
+    @ApiOperation({summary: "get history"})
+    async getHistory(@Req() req, @Res({ passthrough: true }) res, @Body() body): Promise<{statusCode: HttpStatus, history: string[]}> {
+        const response = await this.profileService.getHistory(req.user.id);
+        res.status(HttpStatus.OK);
+        return response;
+    }
+
+    @UseGuards(JwtGuard)
+    @Delete('/history/delete')
+    @ApiSecurity('authorization')
+    @ApiTags('Profile')
+    @ApiOperation({summary: "delete history"})
+    async deleteHistory(@Req() req, @Res({ passthrough: true }) res, @Body() body): Promise<{statusCode: HttpStatus, history: string[]}> {
+        const response = await this.profileService.deleteHistory(req.user.id);
         res.status(HttpStatus.OK);
         return response;
     }
