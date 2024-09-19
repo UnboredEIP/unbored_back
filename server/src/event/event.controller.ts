@@ -43,9 +43,9 @@ export class EventController {
     @ApiSecurity('authorization')
     @ApiOperation({summary: 'List any USERS event (subscribed)'})
     @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
-    @Get('/reservations')
+    @Get('/users/reservations')
     async showEventsFromAnyUser(@Query('id') id, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; reservations: any[] }> {
-        const response = await this.eventService.showEventsFromAnyUser(id)
+        const response = await this.eventService.showEventsFromUser(id);
         res.status(response.statusCode);
         return response;
     }

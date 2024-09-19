@@ -28,17 +28,15 @@ export class EventService {
         return {statusCode: HttpStatus.OK, reservations: test};
     }
 
-    async showEventsFromAnyUser(user: string) : Promise<{statusCode: HttpStatus, reservations: any[]}> {
+    async showEventsFromAnyUser(userId: string) {
         try {
-            const ActualUser = await this.userModel.findOne({_id: user});
-            const userRes = await this.eventModel.find({_id: {$in: ActualUser.reservations}});  
-            return {statusCode: HttpStatus.OK, reservations: userRes};
-        } catch (err) {
-            throw new BadRequestException("Bad request")
+            const user = await this.userModel.findOne({_id: userId})
+            const userEvent = await this.eventModel.find({id: {$in: user.reservations}});
+            return {statusCode: HttpStatus.OK, reservations: userEvent}
+        } catch(err) {
+            throw new BadRequestException("Bad request");
         }
-        // const test = await this.eventModel.find({_id: {$in: user.reservations}});
     }
-
 
     async addEvent(userId : string, addEvent : AddEventDto) : Promise<{statusCode: HttpStatus, reservations: string[]}> {
         try {
