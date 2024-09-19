@@ -39,6 +39,18 @@ export class EventController {
     }
 
     @UseGuards(JwtGuard)
+    @ApiTags('Users Event')
+    @ApiSecurity('authorization')
+    @ApiOperation({summary: 'List any USERS event (subscribed)'})
+    @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
+    @Get('/reservations')
+    async showEventsFromAnyUser(@Query('id') id, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; reservations: any[] }> {
+        const response = await this.eventService.showEventsFromAnyUser(id)
+        res.status(response.statusCode);
+        return response;
+    }
+
+    @UseGuards(JwtGuard)
     @Post('/add')
     @ApiTags('Users Event')
     @ApiSecurity('authorization')
