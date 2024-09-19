@@ -17,7 +17,7 @@ export class ChatController {
         return this.chatService.getConversation(userId1, userId2);
     }
 
-    @Post('notification')
+    @Get('notification')
     async getNotification(@Req() req) {
         return this.chatService.getNotification(req.user.id);
     }
