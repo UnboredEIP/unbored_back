@@ -12,11 +12,19 @@ export class ChatController {
         return this.chatService.createMessage(req.user.id, body.receiverId, body.content);
     } 
 
+    @UseGuards(JwtGuard)
     @Get('conversation')
     async getConversation(@Query('id1') userId1, @Query('id2') userId2) {
         return this.chatService.getConversation(userId1, userId2);
     }
 
+    @UseGuards(JwtGuard)
+    @Get('notification')
+    async getNotification(@Req() req) {
+        return this.chatService.getNotifications(req.user.id);
+    }
+
+    @UseGuards(JwtGuard)
     @Post('delete/notification')
     async deleteNotification(@Req() req, @Body() body: {number: number}) {
         return this.chatService.deleteNotification(req.user.id, body.number);
