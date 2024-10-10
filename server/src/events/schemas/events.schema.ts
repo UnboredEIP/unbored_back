@@ -18,6 +18,7 @@ export class Events extends Document {
         stars: string;
         comments: string;
         userId: string;
+        rateAt: Date;
     }[];
 
     @Prop()
@@ -45,7 +46,7 @@ export class Events extends Document {
     private: boolean;
     
     @Prop()
-    participents: {key: string, user: string, registered: boolean}[];
+    participents: {key: string, user: string, registered: boolean, joinedAt: Date}[];
     
     @Prop()
     price: string;

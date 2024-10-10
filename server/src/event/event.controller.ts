@@ -20,7 +20,7 @@ export class EventController {
     @ApiOperation({summary: 'List Actual USERS event (subscribed)'})
     @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
     @Get('/')
-    async showEvent(@Req() req, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; reservations: string[] }> {
+    async showEvent(@Req() req, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; reservations: any[] }> {
         const response = await this.eventService.showEvent(req.user);
         res.status(response.statusCode);
         return response;
@@ -56,7 +56,7 @@ export class EventController {
     @ApiSecurity('authorization')
     @ApiOperation({summary: 'Add event to actual user'})
     @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
-    async addEvent(@Req() req, @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) addEventDto: AddEventDto, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; reservations: string[] }> {
+    async addEvent(@Req() req, @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) addEventDto: AddEventDto, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; reservations: any[] }> {
         const response = await this.eventService.addEvent(req.user.id, addEventDto);
         res.status(response.statusCode);
         return response;
@@ -68,7 +68,7 @@ export class EventController {
     @ApiSecurity('authorization')
     @ApiOperation({summary: 'delete event from actual user'})
     @ApiConsumes('application/x-www-form-urlencoded', 'application/json')
-    async removeEvent(@Req() req, @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) deleteEventDto: RemoveEventDto, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; reservations: string[] }> {
+    async removeEvent(@Req() req, @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) deleteEventDto: RemoveEventDto, @Res({ passthrough: true }) res): Promise<{ statusCode: HttpStatus; reservations: any[] }> {
         const response = await this.eventService.removeEvent(req.user.id, deleteEventDto);
         res.status(response.statusCode);
         return response;

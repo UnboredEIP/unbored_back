@@ -19,7 +19,7 @@ export class EventService {
         private eventModel: Model<Events>,
     ){}
 
-    async showEvent(user : User) : Promise<{statusCode: HttpStatus, reservations: string[]}> {
+    async showEvent(user : User) : Promise<{statusCode: HttpStatus, reservations: any}> {
         return {statusCode: HttpStatus.OK, reservations: user.reservations};
     }
 
@@ -38,7 +38,7 @@ export class EventService {
         }
     }
 
-    async addEvent(userId : string, addEvent : AddEventDto) : Promise<{statusCode: HttpStatus, reservations: string[]}> {
+    async addEvent(userId : string, addEvent : AddEventDto) : Promise<{statusCode: HttpStatus, reservations: any}> {
         try {
             const existingEvents = (await this.eventModel.find({ _id: { $in: addEvent.events } }))
             const eventsToUpdate = await this.eventModel.find({_id: { $in: existingEvents }, "participents.user": { $ne: userId }}).select("_id");
@@ -49,16 +49,21 @@ export class EventService {
                 key: key,
                 user: userId,
                 registered: false,
+                joinedAt: new Date()
             }
             await this.eventModel.updateMany({ _id: { $in: eventsToUpdate.map(event => event._id) } }, { $addToSet: { participents: user } });
         } catch (err) {
             throw new BadRequestException("Bad request")
         }
-        const updatedUser = await this.userModel.findByIdAndUpdate(userId, { $addToSet : { reservations: { $each: addEvent.events }}}, {new: true})
+        const reservationsToAdd = addEvent.events.map(eventId => ({
+            id: eventId,
+            joinedAt: new Date()
+        }));
+        const updatedUser = await this.userModel.findByIdAndUpdate(userId,{ $addToSet: { reservations: { $each: reservationsToAdd } } },{ new: true });
         return {statusCode: HttpStatus.OK, reservations: updatedUser.reservations};
     }
 
-    async removeEvent(userId : string, deleteEvent : RemoveEventDto) : Promise<{statusCode: HttpStatus, reservations: string[]}> {
+    async removeEvent(userId : string, deleteEvent : RemoveEventDto) : Promise<{statusCode: HttpStatus, reservations: any[]}> {
         try {
             const existingEvents = (await this.eventModel.find({_id: {$in: deleteEvent.events}}))
             if (existingEvents.length < 1)

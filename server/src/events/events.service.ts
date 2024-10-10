@@ -104,6 +104,14 @@ export class EventsService {
         return {statusCode: HttpStatus.CREATED, event: event};
     }
 
+    async deleteUserFromEvent(id: string, eventId: string, userList: string[]) : Promise<{statusCode: HttpStatus, message: string}> {
+        const exists = await this.eventModel.findOne({_id: id})
+        if (exists.creator !== id)
+            throw new BadRequestException("You are not the owner of this event")
+        await this.eventModel.findOneAndUpdate({_id: eventId}, {$pull: {participents: userList}})
+        return {statusCode: HttpStatus.OK, message: "Successfully deleted"}
+    }
+
     async deleteUnboredEvent(actualId: string, eventId : string) : Promise <{statusCode: HttpStatus, message: string}> {
         if (!Types.ObjectId.isValid(eventId)) {
             throw new NotFoundException('Invalid Id');

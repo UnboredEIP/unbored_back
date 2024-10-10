@@ -52,7 +52,7 @@ export class User extends Document {
     preferences: string[];
 
     @Prop()
-    reservations: string[];
+    reservations: {id: string, joinedAt: Date}[];
 
     @Prop()
     pastReservations: string[];

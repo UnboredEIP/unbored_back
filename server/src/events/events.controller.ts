@@ -61,6 +61,14 @@ export class EventsController {
         return response;
     }
 
+    @UseGuards(JwtGuard, ProGuard)
+    @Put('/delete/user')
+    async deleteUserFromEvent(@Req() req, @Res({ passthrough: true }) res) : Promise<{statusCode: HttpStatus, message: string}> {
+        const response = await this.eventsService.deleteUserFromEvent(req.user.id, req.body.eventId, req.body.userList);
+        res.status(response.statusCode)
+        return response;
+    } 
+
     @UseGuards(JwtGuard)
     @Put('/edit')
     @ApiTags('Global Events')
