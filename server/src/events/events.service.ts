@@ -105,8 +105,8 @@ export class EventsService {
     }
 
     async deleteUserFromEvent(id: string, eventId: string, userList: string[]) : Promise<{statusCode: HttpStatus, message: string}> {
-        const exists = await this.eventModel.findOne({_id: id})
-        if (exists.creator !== id)
+        const exists = await this.eventModel.findOne({_id: eventId})
+        if (exists?.creator !== id)
             throw new BadRequestException("You are not the owner of this event")
         await this.eventModel.findOneAndUpdate({_id: eventId}, {$pull: {'participents.user': userList}})
         return {statusCode: HttpStatus.OK, message: "Successfully deleted"}
