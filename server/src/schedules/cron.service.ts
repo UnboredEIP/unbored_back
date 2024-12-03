@@ -54,7 +54,6 @@ export class CronService {
 
     @Cron(CronExpression.EVERY_10_SECONDS)
     async deleteEndEvent() {
-        console.log("2");
         const actual = new Date();
         const events = await this.eventModel.find({$and: [{"end_date": { $lte: actual }}, {end: false}]});
         for (let event of events) {
