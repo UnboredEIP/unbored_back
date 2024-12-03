@@ -24,7 +24,7 @@ export class EventService {
     }
 
     async showEventsFromUser(user: User) : Promise<{statusCode: HttpStatus, reservations: any[]}> {
-        const test = await this.eventModel.find({_id: {$in: user.reservations}});
+        const test = await this.eventModel.find({_id: {$in: user.reservations.map((res) => {return res.id})}});
         return {statusCode: HttpStatus.OK, reservations: test};
     }
 
@@ -42,8 +42,9 @@ export class EventService {
         try {
             const existingEvents = (await this.eventModel.find({ _id: { $in: addEvent.events } }))
             const eventsToUpdate = await this.eventModel.find({_id: { $in: existingEvents }, "participents.user": { $ne: userId }}).select("_id");
-            if (eventsToUpdate.length < 1)
-                throw new BadRequestException("Bad request")
+            if (eventsToUpdate.length < 1) {
+                throw new BadRequestException("Reservation already exists")
+            }
             const key = randomBytes(20).toString('hex');
             const user = {
                 key: key,
@@ -85,13 +86,15 @@ export class EventService {
             stars: rateEventDto.stars,
             comments: rateEventDto.comments,
             userId: userId,
-            id: newID
+            id: newID,
+            rateAt: new Date,
         }
         const rateEventForUser = {
             idRate: newID,
             event: eventId,
             stars: rateEventDto.stars,
             comments: rateEventDto.comments,
+            rateAt: new Date,
         }
         const updateRate = await this.eventModel.findByIdAndUpdate(eventId, { $addToSet : { rate : rateEvent}}, {new: true})
         await this.userModel.findByIdAndUpdate(userId, { $addToSet : { rates: rateEventForUser}}, {new: true});

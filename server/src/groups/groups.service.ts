@@ -15,7 +15,7 @@ export class GroupsService {
     ){}
 
     async showGroupWithId(id: string) : Promise<{statusCode: HttpStatus, group: Object}> {
-        const group = await this.groupModel.findById(id)
+        const group = await this.groupModel.findOne({_id: id})
         if (!group)
             throw new NotFoundException("Group not found")
         return {statusCode: HttpStatus.OK, group: group};
