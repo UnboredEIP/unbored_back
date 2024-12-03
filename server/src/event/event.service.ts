@@ -54,7 +54,7 @@ export class EventService {
             }
             await this.eventModel.updateMany({ _id: { $in: eventsToUpdate.map(event => event._id) } }, { $addToSet: { participents: user } });
         } catch (err) {
-            throw new BadRequestException("Bad request")
+            throw new BadRequestException(err.message)
         }
         const reservationsToAdd = addEvent.events.map(eventId => ({
             id: eventId,
