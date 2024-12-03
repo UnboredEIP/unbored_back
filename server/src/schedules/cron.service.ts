@@ -43,7 +43,6 @@ export class CronService {
 
     @Cron(CronExpression.EVERY_10_MINUTES)
     async deleteNotExistingUsersFromEvent() {
-        console.log("1");
         const events = await this.eventModel.find({});
         for (let event of events) {
             const eventParticipents = event.participents
@@ -56,15 +55,15 @@ export class CronService {
     @Cron(CronExpression.EVERY_10_SECONDS)
     async deleteEndEvent() {
         console.log("2");
-
         const actual = new Date();
         const events = await this.eventModel.find({$and: [{"end_date": { $lte: actual }}, {end: false}]});
         for (let event of events) {
             const eventId = event._id.toString();
+            const participantUsers = event.participents.map(participant => participant.user);
             if (event.rewards) {
                 await this.userModel.updateMany(
                     {
-                        _id: {$in: event.participents}
+                        _id: {$in: participantUsers}
                     },
                     { 
                         $addToSet: {unlockedStyle: { $each: event.rewards}},
@@ -85,8 +84,6 @@ export class CronService {
 
     @Cron(CronExpression.EVERY_12_HOURS)
     async deleteUnusedEventId() {
-        console.log("3");
-
         const users = await this.userModel.find({ 'reservations': { $exists: true, $not: { $size: 0 } } });
 
         const isValidReservation = async (eventId) => {

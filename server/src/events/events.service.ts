@@ -108,7 +108,8 @@ export class EventsService {
         const exists = await this.eventModel.findOne({_id: eventId})
         if (exists?.creator !== id)
             throw new BadRequestException("You are not the owner of this event")
-        await this.eventModel.findOneAndUpdate({_id: eventId}, {$pull: {'participents.user': {$in: userList}}})
+        // await this.eventModel.findOneAndUpdate({_id: eventId}, {$pull: {'participents.user': {$in: userList}}})
+        await this.eventModel.findOneAndUpdate({ _id: eventId }, {$pull: { participents: { user: { $in: userList } } } });
         return {statusCode: HttpStatus.OK, message: "Successfully deleted"}
     }
 
