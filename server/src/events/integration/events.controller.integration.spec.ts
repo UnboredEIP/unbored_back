@@ -40,6 +40,9 @@ describe('EventController', () => {
     let adminUserBearer: string;
 
     beforeAll(async () => {
+        console.log("USER :", process.env.MONGO_USER)
+        console.log("USER PASS :", process.env.MONGO_USER_PASS)
+        console.log("URL :", process.env.URL);
         const moduleRef = await Test.createTestingModule({
             imports: [ConfigModule.forRoot({ isGlobal: true}), EventsModule, EventModule, AuthModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@${process.env.URL}:27017/unboredEventsEnv`)],
             providers: [{provide: getModelToken(User.name), useValue: {}}]
