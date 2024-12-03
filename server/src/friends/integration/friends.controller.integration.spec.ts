@@ -40,7 +40,7 @@ describe('FriendController', () => {
 
     beforeAll(async () => {
         const moduleRef = await Test.createTestingModule({
-            imports: [ConfigModule.forRoot({ isGlobal: true}), FriendsModule, AuthModule, ProfileModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@localhost:27017/unboredFriendsEnv`)],
+            imports: [ConfigModule.forRoot({ isGlobal: true}), FriendsModule, AuthModule, ProfileModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@${process.env.URL}:27017/unboredFriendsEnv`)],
             providers: [{provide: getModelToken(User.name), useValue: {}}]
         }).compile();
 

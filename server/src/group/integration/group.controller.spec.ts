@@ -39,7 +39,7 @@ describe('EventController', () => {
 
     beforeAll(async () => {
         const moduleRef = await Test.createTestingModule({
-            imports: [ConfigModule.forRoot({ isGlobal: true}), GroupModule, GroupsModule, AuthModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@localhost:27017/unboredGroupEnv`)],
+            imports: [ConfigModule.forRoot({ isGlobal: true}), GroupModule, GroupsModule, AuthModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@${process.env.URL}:27017/unboredGroupEnv`)],
             providers: [{provide: getModelToken(User.name), useValue: {}}]
         }).compile();
 

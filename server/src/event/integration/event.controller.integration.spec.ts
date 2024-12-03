@@ -41,7 +41,7 @@ describe('EventController', () => {
 
     beforeAll(async () => {
         const moduleRef = await Test.createTestingModule({
-            imports: [ConfigModule.forRoot({ isGlobal: true}), EventModule, AuthModule, EventsModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@localhost:27017/unboredEventEnv`)],
+            imports: [ConfigModule.forRoot({ isGlobal: true}), EventModule, AuthModule, EventsModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@${process.env.URL}:27017/unboredEventEnv`)],
             providers: [
                 {provide: getModelToken(User.name), useValue: {}},
             ]

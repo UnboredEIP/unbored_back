@@ -41,7 +41,7 @@ describe('ProfileController', () => {
 
     beforeAll(async () => {
         const moduleRef = await Test.createTestingModule({
-            imports: [ConfigModule.forRoot({ isGlobal: true}), ProfileModule, AuthModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@localhost:27017/unboredProfileEnv`)],
+            imports: [ConfigModule.forRoot({ isGlobal: true}), ProfileModule, AuthModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@${process.env.URL}:27017/unboredProfileEnv`)],
             providers: [{provide: getModelToken(User.name), useValue: {}}]
         }).compile();
 

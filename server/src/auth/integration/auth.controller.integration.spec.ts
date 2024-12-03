@@ -26,7 +26,7 @@ describe('AuthController', () => {
 
     beforeAll(async () => {
         const moduleRef = await Test.createTestingModule({
-            imports: [ConfigModule.forRoot({ isGlobal: true}), AuthModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@localhost:27017/unboredAuthEnv`)],
+            imports: [ConfigModule.forRoot({ isGlobal: true}), AuthModule, DatabaseModule.forRoot(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_USER_PASS}@${process.env.URL}:27017/unboredAuthEnv`)],
             providers: [{provide: getModelToken(User.name), useValue: {}}]
         }).compile();
 
