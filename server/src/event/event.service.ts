@@ -56,11 +56,7 @@ export class EventService {
         } catch (err) {
             throw new BadRequestException(err.message)
         }
-        const reservationsToAdd = addEvent.events.map(eventId => ({
-            id: eventId,
-            joinedAt: new Date()
-        }));
-        const updatedUser = await this.userModel.findByIdAndUpdate(userId,{ $addToSet: { reservations: { $each: reservationsToAdd } } },{ new: true });
+        const updatedUser = await this.userModel.findByIdAndUpdate(userId,{ $addToSet: { reservations: { $each: addEvent.events } } },{ new: true });
         return {statusCode: HttpStatus.OK, reservations: updatedUser.reservations};
     }
 
